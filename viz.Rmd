@@ -1,0 +1,149 @@
+---
+title: "data_viz"
+author: "Charles Hendrickson"
+date: "8/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+
+# specifically for data-viz
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+library(gapminder)
+library(sf)
+
+```
+
+## Get lizards data
+
+```{r}
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+```
+
+# Histogram of lizard weights 
+```{r}
+ggplot(data = lizards, aes(x = weight)) + 
+  geom_histogram(fill = "orange",
+                 color = "purple",
+                 size = 0.2)
+```
+
+
+# total_length on x-axis
+#weight on y axis
+
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(shape = 22,
+             fill = "yellow",
+             color = "red",
+             size = 4,
+             alpha = 0.5)
+```
+
+# Bubble plot - changing the size of a point based on the variable 
+color of points based on common_name and size vares with total length 
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name, size = total_length),
+             shape = 22,
+             ) +
+  theme_light()
+
+```
+
+# Facet_wrap lines things up
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name)) +
+  theme_light() +
+  facet_wrap(~common_name, ncol = 7)
+
+```
+
+
+# facet_grid matches the intersections 
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name)) +
+  facet_grid(sex ~ tail)
+```
+
+
+```{r}
+lizard_counts <- lizards %>% 
+  group_by(common_name) %>% 
+  summarize(count = n())
+
+# Same thing
+lizard_counts <- lizards %>% dplyr::count(common_name)
+
+lizard_count_cn_tail <- lizards %>% dplyr::count(common_name, tail)
+
+```
+
+```{r}
+ggplot(data = lizard_counts, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col(aes(fill = common_name), show.legend = FALSE) +
+  labs(x = "lizard counts")
+  
+```
+
+```{r}
+lizard_counts_new <- lizard_counts %>% 
+  mutate(common_name = fct_reorder(common_name, n))
+```
+
+## Axis scale breaks, limits and labels 
+
+Scatterplot: total_length (x) versus weight (y)
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  scale_x_continuous(breaks = c(0, 10, 50, 500),
+                     limits = c(0, 500),
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0,0))
+  
+```
+# Transform the date column to class Date, then find counts of observations by date.
+```{r}
+lizard_counts <- lizards %>% 
+  mutate(date = lubridate::mdy(date)) %>% 
+  count(date)
+  
+class(lizard_counts$date)
+
+```
+
+make a line plot (geom_line()) of date (x) and count (y)
+
+```{r}
+ggplot(data = lizard_counts, aes(x= date, y = n)) +
+  geom_line() +
+  scale_x_date(date_breaks = "3 years",
+               date_labels = "%y")
+  
+  
+```
+
+
+
+
+
+
+
+
+
+
+
